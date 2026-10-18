@@ -1,0 +1,33 @@
+# Python & Environment
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+build/
+.pytest_cache/
+
+# Repack archives & aria2 state
+*.rar
+*.rar.aria2
+*.bin
+*.bin.aria2
+test.rar
+test.rar.aria2
+test_gui_links.txt
+
+# Temporary / test files
+test_*.py
+test_all.py
+test_downloader.py
+test_failure.py
+test_5dl.py
+test_pipeline.py
+test_pw.py
+test_resolver.py
+test_dl.py
+create_assets.py
+
+# Keep dist for users who clone or release packages, but ignore OS clutter
+Thumbs.db
+Desktop.ini
+.DS_Store
