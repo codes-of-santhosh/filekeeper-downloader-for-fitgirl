@@ -1,5 +1,4 @@
 from PySide6.QtCore import QThread, Signal
-from playwright.sync_api import sync_playwright
 import time
 import re
 import os
@@ -16,41 +15,29 @@ class PasteWorker(QThread):
         self.url = url
         
     def run(self):
+        # 1. Direct validation check
+        if not self.url or not self.url.startswith("http"):
+            self.error_signal.emit("Please enter a valid FitGirl paste URL (e.g. https://paste.fitgirl-repacks.site/?id#key)")
+            return
+
+        if "?" not in self.url or "#" not in self.url:
+            self.error_signal.emit("Invalid FitGirl paste URL format. It must contain '?' and '#<key>' (e.g. https://paste.fitgirl-repacks.site/?id#key)")
+            return
+
+        # 2. Ultra-fast native PrivateBin decryption (<0.2s, no browser needed)
         try:
-            # 1. Ultra-fast native PrivateBin decryption (<0.2s, no browser needed)
             from ..paste_parser import PasteParser
             parser = PasteParser()
             links = parser.get_filekeeper_links(self.url)
             if links:
                 self.finished_signal.emit(links)
                 return
-        except Exception:
-            pass
-
-        # 2. Fallback to Playwright if native decrypt encounters unexpected paste format
-        try:
-            from playwright.sync_api import sync_playwright
-            links = []
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                context = browser.new_context()
-                page = context.new_page()
-                page.goto(self.url, wait_until="networkidle")
-                page.wait_for_timeout(4000)
-                
-                hrefs = page.evaluate('''() => {
-                    return Array.from(document.querySelectorAll('a'))
-                                .map(a => a.href)
-                                .filter(href => href.includes('filekeeper.net') || href.includes('filekeeper.com'));
-                }''')
-                
-                unique_hrefs = list(set(hrefs))
-                links = [FileKeeperLink(url=h) for h in unique_hrefs]
-                browser.close()
-                
-            self.finished_signal.emit(links)
+            else:
+                self.error_signal.emit("No FileKeeper links found in the paste.")
+                return
         except Exception as e:
-            self.error_signal.emit(str(e))
+            # If native decryption fails, report the actual decryption error directly
+            self.error_signal.emit(f"Failed to decrypt paste: {e}")
 
 
 class ResolverWorker(QThread):
