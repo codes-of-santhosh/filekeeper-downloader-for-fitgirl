@@ -60,19 +60,29 @@ class MainWindow(QMainWindow):
         self.btn_sel_all = QPushButton("Select All")
         self.btn_desel_all = QPushButton("Deselect All")
         self.btn_inv_sel = QPushButton("Invert Selection")
+        self.btn_check_sel = QPushButton("Check Highlighted")
+        self.btn_uncheck_sel = QPushButton("Uncheck Highlighted")
         self.model = FileTableModel()
         self.btn_sel_all.clicked.connect(lambda: self.model.set_all_checked(True))
         self.btn_desel_all.clicked.connect(lambda: self.model.set_all_checked(False))
         self.btn_inv_sel.clicked.connect(self.model.invert_selection)
+        self.btn_check_sel.clicked.connect(lambda: self.set_highlighted_checked(True))
+        self.btn_uncheck_sel.clicked.connect(lambda: self.set_highlighted_checked(False))
         row_sel.addWidget(self.btn_sel_all)
         row_sel.addWidget(self.btn_desel_all)
         row_sel.addWidget(self.btn_inv_sel)
+        row_sel.addWidget(self.btn_check_sel)
+        row_sel.addWidget(self.btn_uncheck_sel)
         row_sel.addStretch()
         layout.addLayout(row_sel)
         
         self.table = QTableView()
         self.table.setModel(self.model)
+        self.table.setSelectionBehavior(QTableView.SelectRows)
+        self.table.setSelectionMode(QTableView.ExtendedSelection)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.horizontalHeader().setHighlightSections(False)
+        self.table.keyPressEvent = self.table_key_press_event
         layout.addWidget(self.table)
         
         row3 = QHBoxLayout()
@@ -132,6 +142,25 @@ class MainWindow(QMainWindow):
         self.url_input.setEnabled(enabled)
         self.btn_fetch.setEnabled(enabled)
         self.btn_start.setEnabled(enabled)
+
+    def get_selected_table_rows(self) -> list[int]:
+        selected_indexes = self.table.selectionModel().selectedRows()
+        return [idx.row() for idx in selected_indexes]
+
+    def set_highlighted_checked(self, checked: bool):
+        rows = self.get_selected_table_rows()
+        if rows:
+            self.model.set_rows_checked(rows, checked)
+
+    def table_key_press_event(self, event):
+        if event.key() == Qt.Key_Space:
+            rows = self.get_selected_table_rows()
+            if rows:
+                any_unchecked = any(not self.model.checked_states[r] for r in rows if 0 <= r < len(self.model.checked_states))
+                self.model.set_rows_checked(rows, any_unchecked)
+                event.accept()
+                return
+        QTableView.keyPressEvent(self.table, event)
         
     def on_fetch_clicked(self):
         url = self.url_input.text().strip()

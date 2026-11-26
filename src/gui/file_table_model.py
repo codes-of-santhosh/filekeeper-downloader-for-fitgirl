@@ -55,8 +55,9 @@ class FileTableModel(QAbstractTableModel):
         
     def flags(self, index):
         flags = super().flags(index)
+        flags |= Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if index.column() == 0:
-            flags |= Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
+            flags |= Qt.ItemIsUserCheckable
         return flags
         
     def headerData(self, section, orientation, role=Qt.DisplayRole):
@@ -83,9 +84,20 @@ class FileTableModel(QAbstractTableModel):
     def set_all_checked(self, checked: bool):
         for i in range(len(self.checked_states)):
             self.checked_states[i] = checked
-        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount()-1, 0), [Qt.CheckStateRole])
+        if self.rowCount() > 0:
+            self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount()-1, 0), [Qt.CheckStateRole])
         
     def invert_selection(self):
         for i in range(len(self.checked_states)):
             self.checked_states[i] = not self.checked_states[i]
-        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount()-1, 0), [Qt.CheckStateRole])
+        if self.rowCount() > 0:
+            self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount()-1, 0), [Qt.CheckStateRole])
+
+    def set_rows_checked(self, rows: list[int], checked: bool):
+        if not rows:
+            return
+        for r in rows:
+            if 0 <= r < len(self.checked_states):
+                self.checked_states[r] = checked
+                idx = self.index(r, 0)
+                self.dataChanged.emit(idx, idx, [Qt.CheckStateRole])
