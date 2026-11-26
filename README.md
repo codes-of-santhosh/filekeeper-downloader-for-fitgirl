@@ -17,11 +17,11 @@ No ad redirects, no clicking 100 links by hand, and no failed downloads from exp
 
 ---
 
-## 🎬 30-Second Tutorial
+## 🎬 Quick Demo
 
-Watch how to paste the link, decrypt all parts in 1 second, and start downloading:
-
-https://github.com/codes-of-santhosh/filekeeper-downloader-for-fitgirl/releases/download/v1.0.1/demo-tutorial.mp4
+<div align="center">
+  <img src="assets/demo.gif" alt="FileKeeper Batch Downloader Demo" width="100%">
+</div>
 
 ---
 
