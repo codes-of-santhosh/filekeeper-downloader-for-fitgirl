@@ -41,10 +41,6 @@ jobs:
           }
           Test-Path "aria2c.exe"
 
-      - name: Generate Icon Assets If Missing
-        run: |
-          python create_assets.py
-
       - name: Build Application Directory (PyInstaller onedir mode)
         run: |
           pyinstaller --clean --noconfirm filekeeper.spec
