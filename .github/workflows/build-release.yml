@@ -1,0 +1,75 @@
+name: Build & Release Clean Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Verify or Download aria2c
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "aria2c.exe")) {
+            Write-Host "Downloading official aria2c binary..."
+            Invoke-WebRequest -Uri "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip" -OutFile "aria2.zip"
+            Expand-Archive -Path "aria2.zip" -DestinationPath "aria2_temp" -Force
+            Copy-Item "aria2_temp\*\aria2c.exe" -Destination "aria2c.exe"
+            Remove-Item -Recurse -Force "aria2.zip", "aria2_temp"
+          }
+          Test-Path "aria2c.exe"
+
+      - name: Generate Icon Assets If Missing
+        run: |
+          python create_assets.py
+
+      - name: Build Application Directory (PyInstaller onedir mode)
+        run: |
+          pyinstaller --clean --noconfirm filekeeper.spec
+
+      - name: Build Windows Installer with Inno Setup
+        uses: JerryGCode/inno-setup-action@v1.1
+        with:
+          filepath: installer.iss
+
+      - name: Compute SHA-256 Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path "dist-installer\*.exe" | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+            "$hash  $($_.Name)" | Out-File -Append -Encoding utf8 "dist-installer\checksums-sha256.txt"
+          }
+          Get-Content "dist-installer\checksums-sha256.txt"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist-installer/FileKeeper-Downloader-Setup.exe
+            dist-installer/checksums-sha256.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true
