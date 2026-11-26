@@ -12,12 +12,15 @@ A desktop tool to download split FileKeeper archives from FitGirl paste pages in
 
 ---
 
-## 📹 Video Tutorial
+## 📹 Demo & Tutorial
 
-<!-- Replace YOUR_VIDEO_ID with your YouTube video ID once uploaded -->
-[![Watch Video Tutorial](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/YOUR_VIDEO_ID" controls width="100%" poster="assets/banner.png">
+    Your browser does not support the video tag.
+  </video>
+</div>
 
-> 💡 *Click the video above to see how to copy the paste link, fetch all 100+ file parts, and download them automatically.*
+> *Tip: Watch the demo above to see how to copy the FitGirl paste URL, decrypt all 100+ files instantly, and download them automatically.*
 
 ---
 
